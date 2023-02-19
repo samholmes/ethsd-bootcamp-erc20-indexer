@@ -9,16 +9,16 @@ import {
   SimpleGrid,
   Text,
 } from '@chakra-ui/react';
-import { Alchemy, Network, Utils } from 'alchemy-sdk';
+import { Alchemy, BigNumber, Network, TokenBalancesResponseErc20, TokenMetadataResponse, Utils } from 'alchemy-sdk';
 import { useState } from 'react';
 
 const { VITE_ALCHEMY_API_KEY } = import.meta.env 
 
 function App() {
   const [userAddress, setUserAddress] = useState('');
-  const [results, setResults] = useState([]);
+  const [tokenBalances, setTokenBalances] = useState<TokenBalancesResponseErc20['tokenBalances']>([]);
   const [hasQueried, setHasQueried] = useState(false);
-  const [tokenDataObjects, setTokenDataObjects] = useState([]);
+  const [tokenDataObjects, setTokenDataObjects] = useState<TokenMetadataResponse[]>([]);
 
   async function getTokenBalance() {
     const config = {
@@ -29,9 +29,9 @@ function App() {
     const alchemy = new Alchemy(config);
     const data = await alchemy.core.getTokenBalances(userAddress);
 
-    setResults(data);
+    setTokenBalances(data.tokenBalances);
 
-    const tokenDataPromises = [];
+    const tokenDataPromises: Array<Promise<TokenMetadataResponse>> = [];
 
     for (let i = 0; i < data.tokenBalances.length; i++) {
       const tokenData = alchemy.core.getTokenMetadata(
@@ -70,7 +70,7 @@ function App() {
           Get all the ERC-20 token balances of this address:
         </Heading>
         <Input
-          onChange={(e) => setUserAddress(e.target.value)}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserAddress(event.target.value)}
           color="black"
           w="600px"
           textAlign="center"
@@ -86,26 +86,30 @@ function App() {
 
         {hasQueried ? (
           <SimpleGrid w={'90vw'} columns={4} spacing={24}>
-            {results.tokenBalances.map((e, i) => {
+            {tokenBalances.map((tokenBalance, i) => {
+              const logo = tokenDataObjects[i].logo
               return (
                 <Flex
                   flexDir={'column'}
                   color="white"
                   bg="blue"
                   w={'20vw'}
-                  key={e.id}
+                  key={tokenBalance.contractAddress}
                 >
                   <Box>
                     <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
                   </Box>
                   <Box>
                     <b>Balance:</b>&nbsp;
-                    {Utils.formatUnits(
-                      e.tokenBalance,
-                      tokenDataObjects[i].decimals
-                    )}
+                    {tokenBalance.tokenBalance != null ? Utils.formatUnits(
+                      tokenBalance.tokenBalance,
+                      BigNumber.from(tokenDataObjects[i].decimals)
+                    ) : null}
                   </Box>
-                  <Image src={tokenDataObjects[i].logo} />
+                  {logo == null 
+                    ? null 
+                    : <Image src={logo} />
+                  }
                 </Flex>
               );
             })}
