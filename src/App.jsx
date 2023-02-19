@@ -12,6 +12,8 @@ import {
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useState } from 'react';
 
+const { VITE_ALCHEMY_API_KEY } = import.meta.env 
+
 function App() {
   const [userAddress, setUserAddress] = useState('');
   const [results, setResults] = useState([]);
@@ -20,7 +22,7 @@ function App() {
 
   async function getTokenBalance() {
     const config = {
-      apiKey: '<-- COPY-PASTE YOUR ALCHEMY API KEY HERE -->',
+      apiKey: VITE_ALCHEMY_API_KEY,
       network: Network.ETH_MAINNET,
     };
 
