@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.4.6",
+    "@chakra-ui/react": "^2.5.1",
     "alchemy-sdk": "^2.2.5",
     "ethers": "^5.7.2",
     "react": "^18.2.0",
