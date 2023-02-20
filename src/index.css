@@ -106,3 +106,8 @@ button:focus-visible {
     transform: rotate(360deg);
   }
 }
+
+.ellipsisIt {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}

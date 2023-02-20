@@ -21,6 +21,7 @@ import { ethers } from "ethers";
 import { useState } from "react";
 import { Loader } from "./components/Loader";
 import { useWeb3Account } from "./hooks/useWeb3Account";
+import { truncate } from "./utils/truncate";
 
 const { VITE_ALCHEMY_API_KEY } = import.meta.env;
 
@@ -142,6 +143,18 @@ function App() {
           <SimpleGrid w={"90vw"} columns={4} spacing={24}>
             {tokenBalances.map((tokenBalance, i) => {
               const logo = tokenDataObjects[i].logo;
+              const balance =
+                tokenBalance.tokenBalance != null
+                  ? ethers.utils.commify(
+                      truncate(
+                        Utils.formatUnits(
+                          tokenBalance.tokenBalance,
+                          BigNumber.from(tokenDataObjects[i].decimals)
+                        ),
+                        2
+                      )
+                    )
+                  : null;
               return (
                 <Flex
                   flexDir={"column"}
@@ -155,14 +168,9 @@ function App() {
                   <Box>
                     <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
                   </Box>
-                  <Box>
+                  <Box className="ellipsisIt">
                     <b>Balance:</b>&nbsp;
-                    {tokenBalance.tokenBalance != null
-                      ? Utils.formatUnits(
-                          tokenBalance.tokenBalance,
-                          BigNumber.from(tokenDataObjects[i].decimals)
-                        )
-                      : null}
+                    <span>{balance}</span>
                   </Box>
                   {logo == null ? null : <Image src={logo} />}
                 </Flex>
