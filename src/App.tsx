@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Center,
+  Container,
   Flex,
   Heading,
   Image,
@@ -17,11 +18,18 @@ import {
   TokenMetadataResponse,
   Utils,
 } from "alchemy-sdk";
+import { ethers } from "ethers";
 import { useState } from "react";
+import { useWeb3Account } from "./components/useWeb3Account";
 
 const { VITE_ALCHEMY_API_KEY } = import.meta.env;
 
 function App() {
+  //
+  // State:
+  //
+
+  const [account, connect] = useWeb3Account();
   const [userAddress, setUserAddress] = useState("");
   const [tokenBalances, setTokenBalances] = useState<
     TokenBalancesResponseErc20["tokenBalances"]
@@ -30,6 +38,12 @@ function App() {
   const [tokenDataObjects, setTokenDataObjects] = useState<
     TokenMetadataResponse[]
   >([]);
+
+  //
+  // Derived:
+  //
+
+  const isConnected = account !== "";
 
   async function getTokenBalance() {
     const config = {
@@ -54,8 +68,19 @@ function App() {
     setTokenDataObjects(await Promise.all(tokenDataPromises));
     setHasQueried(true);
   }
+
   return (
     <Box w="100vw">
+      <nav>
+        <Flex alignItems="center" justifyContent="space-between">
+          <h1 className="logo">Tokédex</h1>
+          {isConnected ? (
+            <Box>{account}</Box>
+          ) : (
+            <Button onClick={connect}>Connect</Button>
+          )}
+        </Flex>
+      </nav>
       <Center>
         <Flex
           alignItems={"center"}
