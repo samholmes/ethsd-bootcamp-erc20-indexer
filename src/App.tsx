@@ -18,6 +18,7 @@ import {
   Utils,
 } from "alchemy-sdk";
 import { useState } from "react";
+import { Loader } from "./components/Loader";
 import { useWeb3Account } from "./hooks/useWeb3Account";
 
 const { VITE_ALCHEMY_API_KEY } = import.meta.env;
@@ -33,6 +34,7 @@ function App() {
     TokenBalancesResponseErc20["tokenBalances"]
   >([]);
   const [hasQueried, setHasQueried] = useState(false);
+  const [isQuerying, setIsQuerying] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState<
     TokenMetadataResponse[]
   >([]);
@@ -50,6 +52,7 @@ function App() {
     };
 
     const alchemy = new Alchemy(config);
+    setIsQuerying(true);
     const data = await alchemy.core.getTokenBalances(userAddress);
 
     setTokenBalances(data.tokenBalances);
@@ -64,6 +67,7 @@ function App() {
     }
 
     setTokenDataObjects(await Promise.all(tokenDataPromises));
+    setIsQuerying(false);
     setHasQueried(true);
   }
 
@@ -104,6 +108,7 @@ function App() {
           Get all the ERC-20 token balances of this address:
         </Heading>
         <Input
+          placeholder="Enter ethereum address"
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             setUserAddress(event.target.value)
           }
@@ -114,11 +119,13 @@ function App() {
           bgColor="white"
           fontSize={24}
         />
-        <Button fontSize={20} onClick={getTokenBalance} mt={36} bgColor="blue">
+        <Button fontSize={20} onClick={getTokenBalance} mt={36}>
           Check ERC-20 Token Balances
         </Button>
 
         <Heading my={36}>ERC-20 token balances:</Heading>
+
+        {isQuerying ? <Loader /> : null}
 
         {hasQueried ? (
           <SimpleGrid w={"90vw"} columns={4} spacing={24}>

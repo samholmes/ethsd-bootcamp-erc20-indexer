@@ -82,3 +82,27 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.loader {
+  border-radius: 1000px;
+  border: 5px solid white;
+  border-right-color: transparent;
+  width: 24px;
+  height: 24px;
+  animation: loader-animation 0.45s linear infinite;
+}
+
+@keyframes loader-animation {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
