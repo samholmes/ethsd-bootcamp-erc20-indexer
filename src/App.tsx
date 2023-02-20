@@ -17,6 +17,7 @@ import {
   TokenMetadataResponse,
   Utils,
 } from "alchemy-sdk";
+import { ethers } from "ethers";
 import { useState } from "react";
 import { Loader } from "./components/Loader";
 import { useWeb3Account } from "./hooks/useWeb3Account";
@@ -29,7 +30,8 @@ function App() {
   //
 
   const [account, connect] = useWeb3Account();
-  const [userAddress, setUserAddress] = useState("");
+  const [userAddress, setUserAddress] = useState("vitalik.eth");
+  const [error, setError] = useState<any>();
   const [tokenBalances, setTokenBalances] = useState<
     TokenBalancesResponseErc20["tokenBalances"]
   >([]);
@@ -46,29 +48,48 @@ function App() {
   const isConnected = account !== "";
 
   async function getTokenBalance() {
-    const config = {
-      apiKey: VITE_ALCHEMY_API_KEY,
-      network: Network.ETH_MAINNET,
-    };
+    try {
+      setIsQuerying(true);
+      setError(undefined);
 
-    const alchemy = new Alchemy(config);
-    setIsQuerying(true);
-    const data = await alchemy.core.getTokenBalances(userAddress);
+      const config = {
+        apiKey: VITE_ALCHEMY_API_KEY,
+        network: Network.ETH_MAINNET,
+      };
 
-    setTokenBalances(data.tokenBalances);
+      const alchemy = new Alchemy(config);
 
-    const tokenDataPromises: Array<Promise<TokenMetadataResponse>> = [];
+      let address: string = userAddress;
+      try {
+        const result = await alchemy.core.resolveName(userAddress);
+        if (result != null) {
+          address = result;
+        }
+      } catch (error) {}
 
-    for (let i = 0; i < data.tokenBalances.length; i++) {
-      const tokenData = alchemy.core.getTokenMetadata(
-        data.tokenBalances[i].contractAddress
-      );
-      tokenDataPromises.push(tokenData);
+      if (!ethers.utils.isAddress(address)) {
+        throw new Error("Invalid address");
+      }
+
+      const data = await alchemy.core.getTokenBalances(userAddress);
+
+      setTokenBalances(data.tokenBalances);
+
+      const tokenDataPromises: Array<Promise<TokenMetadataResponse>> = [];
+
+      for (let i = 0; i < data.tokenBalances.length; i++) {
+        const tokenData = alchemy.core.getTokenMetadata(
+          data.tokenBalances[i].contractAddress
+        );
+        tokenDataPromises.push(tokenData);
+      }
+
+      setTokenDataObjects(await Promise.all(tokenDataPromises));
+      setIsQuerying(false);
+      setHasQueried(true);
+    } catch (err) {
+      setError(err);
     }
-
-    setTokenDataObjects(await Promise.all(tokenDataPromises));
-    setIsQuerying(false);
-    setHasQueried(true);
   }
 
   return (
@@ -83,21 +104,6 @@ function App() {
           )}
         </Flex>
       </nav>
-      <Center>
-        <Flex
-          alignItems={"center"}
-          justifyContent="center"
-          flexDirection={"column"}
-        >
-          <Heading mb={0} fontSize={36}>
-            ERC-20 Token Indexer
-          </Heading>
-          <Text>
-            Plug in an address and this website will return all of its ERC-20
-            token balances!
-          </Text>
-        </Flex>
-      </Center>
       <Flex
         w="100%"
         flexDirection="column"
@@ -107,8 +113,13 @@ function App() {
         <Heading mt={42}>
           Get all the ERC-20 token balances of this address:
         </Heading>
+        <Text>
+          Plug in an address and this website will return all of its ERC-20
+          token balances!
+        </Text>
         <Input
           placeholder="Enter ethereum address"
+          value={userAddress}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             setUserAddress(event.target.value)
           }
@@ -116,9 +127,9 @@ function App() {
           w="600px"
           textAlign="center"
           p={4}
-          bgColor="white"
           fontSize={24}
         />
+        {error != null ? <Center color="red">{error.message}</Center> : null}
         <Button fontSize={20} onClick={getTokenBalance} mt={36}>
           Check ERC-20 Token Balances
         </Button>
@@ -135,9 +146,11 @@ function App() {
                 <Flex
                   flexDir={"column"}
                   color="white"
-                  bg="blue"
+                  bg="#111"
                   w={"20vw"}
                   key={tokenBalance.contractAddress}
+                  borderRadius={6}
+                  padding={12}
                 >
                   <Box>
                     <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
@@ -156,9 +169,7 @@ function App() {
               );
             })}
           </SimpleGrid>
-        ) : (
-          "Please make a query! This may take a few seconds..."
-        )}
+        ) : null}
       </Flex>
     </Box>
   );
