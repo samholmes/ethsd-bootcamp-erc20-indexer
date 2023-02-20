@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   Center,
-  Container,
   Flex,
   Heading,
   Image,
@@ -18,9 +17,8 @@ import {
   TokenMetadataResponse,
   Utils,
 } from "alchemy-sdk";
-import { ethers } from "ethers";
 import { useState } from "react";
-import { useWeb3Account } from "./components/useWeb3Account";
+import { useWeb3Account } from "./hooks/useWeb3Account";
 
 const { VITE_ALCHEMY_API_KEY } = import.meta.env;
 
